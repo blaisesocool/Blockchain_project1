@@ -1,0 +1,18 @@
+# Build folders
+/build/
+/out/
+/cmake-build-*/
+
+# Compiled files
+*.exe
+*.obj
+*.o
+*.pdb
+*.ilk
+*.idb
+
+# Local editor settings and secrets
+/.vs/
+/.vscode/
+.env
+.env.*
