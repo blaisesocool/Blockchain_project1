@@ -1,6 +1,6 @@
-# Simple Feistel Cipher
+# Blockchain_project1
 
-A small C++ project for learning how a Feistel network works. The program starts with two integer halves, encrypts them, then decrypts them to recover the original values.
+A beginner C++ project for learning how a Feistel cipher works. The program starts with two integer halves, encrypts them, then decrypts them to recover the original values.
 
 This is a toy learning cipher and is not secure for protecting real data.
 
