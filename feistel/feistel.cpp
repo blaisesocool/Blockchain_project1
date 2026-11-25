@@ -1,61 +1,67 @@
-#include <iostream>
+#include "feistel.hpp"
+#include "helpers.hpp"
+#include <utility>
 
+namespace twofish
+{
+    namespace
+    {
+        constexpr int ROUNDS = 16;
+    } // namespace
 
-const unsigned int ROUNDS = 16;
+    using namespace helper;
 
+    void round_function(const KeySchedule& ks, uint32_t r0, uint32_t r1, int round,
+                        uint32_t& f0, uint32_t& f1)
+    {
+        uint32_t t0 = g(r0, ks.sbox);
+        uint32_t t1 = g(rotate(r1, 8, Direction::LEFT), ks.sbox);
 
-
-unsigned int roundFunction(unsigned int right, unsigned int key) {
-    return right^key; // just an XOR
-}
-
-void assignKeys(unsigned int masterKey, unsigned int keys[ROUNDS]) {
-    for (int i = 0; i < ROUNDS; i++) {
-        keys[i] = masterKey + i;
+        pht(t0, t1, f0, f1);
+        f0 += ks.K[2 * round + ROUND_KEY_OFFSET];
+        f1 += ks.K[2 * round + ROUND_KEY_OFFSET + 1];
     }
-}
 
+    void encrypt_block(const KeySchedule& ks, const uint8_t in[16], uint8_t out[16])
+    {
+        uint32_t r[4];
+        for (int i = 0; i < 4; ++i) r[i] = load_le32(in + 4 * i) ^ ks.K[i];
 
-// The & parameters let these functions update the caller's left and right.
-void encrypt(unsigned int& left, unsigned int& right, const unsigned int keys[ROUNDS]) {
-    unsigned int prevright = right;
-    unsigned int prevleft = left;
+        for (int round = 0; round < ROUNDS; ++round)
+        {
+            uint32_t f0, f1;
+            round_function(ks, r[0], r[1], round, f0, f1);
+            r[2] = rotate(r[2] ^ f0, 1, Direction::RIGHT);
+            r[3] = rotate(r[3], 1, Direction::LEFT) ^ f1;
+            std::swap(r[0], r[2]);
+            std::swap(r[1], r[3]);
+        }
 
-    for (int i = 0; i < ROUNDS; i++) {
-        left = prevright;
-        right = prevleft ^ roundFunction(prevright, keys[i]);
-        prevright = right;
-        prevleft = left;
+        // The last swap is undone by the output permutation (R2,R3,R0,R1).
+        store_le32(out + 0, r[2] ^ ks.K[4]);
+        store_le32(out + 4, r[3] ^ ks.K[5]);
+        store_le32(out + 8, r[0] ^ ks.K[6]);
+        store_le32(out + 12, r[1] ^ ks.K[7]);
     }
-}
 
-void decrypt(unsigned int& left, unsigned int& right, const unsigned int keys[ROUNDS]) {
-    for (int i = ROUNDS - 1; i >= 0; i--) {
-        unsigned int prevleft = right ^ roundFunction(left, keys[i]);
-        unsigned int prevright = left;
-        right = prevright;
-        left = prevleft;
+    void decrypt_block(const KeySchedule& ks, const uint8_t in[16], uint8_t out[16])
+    {
+        uint32_t r[4];
+        r[2] = load_le32(in + 0) ^ ks.K[4];
+        r[3] = load_le32(in + 4) ^ ks.K[5];
+        r[0] = load_le32(in + 8) ^ ks.K[6];
+        r[1] = load_le32(in + 12) ^ ks.K[7];
+
+        for (int round = ROUNDS - 1; round >= 0; --round)
+        {
+            std::swap(r[0], r[2]);
+            std::swap(r[1], r[3]);
+            uint32_t f0, f1;
+            round_function(ks, r[0], r[1], round, f0, f1);
+            r[2] = rotate(r[2], 1, Direction::LEFT) ^ f0;
+            r[3] = rotate(r[3] ^ f1, 1, Direction::RIGHT);
+        }
+
+        for (int i = 0; i < 4; ++i) store_le32(out + 4 * i, r[i] ^ ks.K[i]);
     }
-}
-
-int main() {
-    unsigned int left = 5;
-    unsigned int right = 9;
-    unsigned int masterKey = 30;
-    unsigned int keys[ROUNDS] = {0};
-
-
-    std::cout << "Before: " << left << " | " << right << '\n';
-
-
-    assignKeys(masterKey, keys);
-
-    encrypt(left, right, keys);
-    std::cout << "Encrypt:  " << left << " | " << right << '\n';
-
-    decrypt(left, right, keys);
-    std::cout << "decrypt:  " << left << " | " << right << '\n';
-
-
-    return 0;
-}
+} // namespace twofish
