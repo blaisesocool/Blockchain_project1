@@ -1,0 +1,8 @@
+//
+// Created by Dmytro Bykov on 25/11/2026.
+//
+
+#ifndef BLOCKCHAIN_PROJECT1_SBOX_H
+#define BLOCKCHAIN_PROJECT1_SBOX_H
+
+#endif //BLOCKCHAIN_PROJECT1_SBOX_H
