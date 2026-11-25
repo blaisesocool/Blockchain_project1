@@ -74,3 +74,5 @@ Testing/
 /.vscode/
 .env
 .env.*
+
+.idea

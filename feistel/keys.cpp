@@ -12,8 +12,12 @@ namespace twofish
 
     using namespace helper;
 
-    KeySchedule expand_key(const uint8_t* key, size_t key_len)
+    KeySchedule expand_key(const Bytes& key)
     {
+
+        size_t key_len = key.size();
+        const uint8_t* key_ptr = key.data();
+
         if (key_len != 16 && key_len != 24 && key_len != 32)
             throw std::invalid_argument("Twofish key must be 16, 24 or 32 bytes");
 
@@ -23,12 +27,12 @@ namespace twofish
         uint32_t Me[4], Mo[4];
         for (size_t i = 0; i < k; ++i)
         {
-            Me[i] = load_le32(key + 8 * i);
-            Mo[i] = load_le32(key + 8 * i + 4);
+            Me[i] = load_le32(key_ptr + 8 * i);
+            Mo[i] = load_le32(key_ptr + 8 * i + 4);
         }
 
         KeySchedule ks{};
-        ks.sbox = make_sbox_key(key, key_len);
+        ks.sbox = make_sbox_key(key_ptr, key_len);
 
         for (uint32_t i = 0; i < 20; ++i)
         {

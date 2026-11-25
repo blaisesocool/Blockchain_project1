@@ -4,22 +4,20 @@
 
 namespace twofish
 {
-    namespace
-    {
-        constexpr int ROUNDS = 16;
-    } // namespace
 
     using namespace helper;
 
-    void round_function(const KeySchedule& ks, uint32_t r0, uint32_t r1, int round,
-                        uint32_t& f0, uint32_t& f1)
+    std::tuple<uint32_t, uint32_t> round_function(const KeySchedule& ks, uint32_t r0, uint32_t r1, int round)
     {
+        uint32_t f0, f1;
         uint32_t t0 = g(r0, ks.sbox);
         uint32_t t1 = g(rotate(r1, 8, Direction::LEFT), ks.sbox);
 
         pht(t0, t1, f0, f1);
-        f0 += ks.K[2 * round + ROUND_KEY_OFFSET];
-        f1 += ks.K[2 * round + ROUND_KEY_OFFSET + 1];
+        f0 = ks.K[2 * round + ROUND_KEY_OFFSET];
+        f1 = ks.K[2 * round + ROUND_KEY_OFFSET + 1];
+
+        return {f0, f1};
     }
 
     void encrypt_block(const KeySchedule& ks, const uint8_t in[16], uint8_t out[16])
@@ -29,8 +27,7 @@ namespace twofish
 
         for (int round = 0; round < ROUNDS; ++round)
         {
-            uint32_t f0, f1;
-            round_function(ks, r[0], r[1], round, f0, f1);
+            auto [f0, f1] = round_function(ks, r[0], r[1], round);
             r[2] = rotate(r[2] ^ f0, 1, Direction::RIGHT);
             r[3] = rotate(r[3], 1, Direction::LEFT) ^ f1;
             std::swap(r[0], r[2]);
@@ -56,8 +53,7 @@ namespace twofish
         {
             std::swap(r[0], r[2]);
             std::swap(r[1], r[3]);
-            uint32_t f0, f1;
-            round_function(ks, r[0], r[1], round, f0, f1);
+            auto [f0, f1] = round_function(ks, r[0], r[1], round);
             r[2] = rotate(r[2], 1, Direction::LEFT) ^ f0;
             r[3] = rotate(r[3] ^ f1, 1, Direction::RIGHT);
         }

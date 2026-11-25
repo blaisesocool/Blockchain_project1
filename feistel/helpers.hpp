@@ -1,6 +1,7 @@
 #pragma once
 #include <limits>
 #include <type_traits>
+#include <vector>
 
 
 namespace helper
@@ -23,10 +24,10 @@ namespace helper
 
     constexpr size_t BLOCK_BYTES = 16; // 128-bit block
     constexpr size_t BLOCK_WORDS = BLOCK_BYTES / 4; // 4 x 32-bit words
-    constexpr int NUM_ROUNDS = 16;
+    constexpr int ROUNDS = 16;
     constexpr size_t WHITENING_WORDS = 8; // K[0..3] input + K[4..7] output
     constexpr size_t ROUND_KEY_OFFSET = WHITENING_WORDS; // round keys start at K[8]
-    constexpr size_t NUM_SUBKEYS = WHITENING_WORDS + 2 * NUM_ROUNDS; // 40
+    constexpr size_t NUM_SUBKEYS = WHITENING_WORDS + 2 * ROUNDS; // 40
     constexpr size_t KEY_CHUNK_BYTES = 8; // one 64-bit chunk of the key
     constexpr size_t MAX_K = 4; // k for a 256-bit key
 
@@ -36,6 +37,9 @@ namespace helper
         LEFT,
         RIGHT
     };
+
+
+    using Bytes = std::vector<uint8_t>;
 
     // Rotates the lowest `width` bits of x by `amount` positions.
     //   - T is any unsigned integer type (uint8_t, uint32_t, ...).
