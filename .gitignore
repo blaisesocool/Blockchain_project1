@@ -74,3 +74,10 @@ Testing/
 /.vscode/
 .env
 .env.*
+
+# Course PDFs and Claude context file
+*.pdf
+CLAUDE.md
+
+# Compiled RSA program
+rsa_program
