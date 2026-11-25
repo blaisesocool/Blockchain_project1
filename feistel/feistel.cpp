@@ -14,8 +14,8 @@ namespace twofish
         uint32_t t1 = g(rotate(r1, 8, Direction::LEFT), ks.sbox);
 
         pht(t0, t1, f0, f1);
-        f0 = ks.K[2 * round + ROUND_KEY_OFFSET];
-        f1 = ks.K[2 * round + ROUND_KEY_OFFSET + 1];
+        f0 += ks.K[2 * round + ROUND_KEY_OFFSET];
+        f1 += ks.K[2 * round + ROUND_KEY_OFFSET + 1];
 
         return {f0, f1};
     }
